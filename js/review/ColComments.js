@@ -31,17 +31,19 @@ var ColComments = r.Seed.extend({
     this.dp.comments.on('insert edit remove', function() {setTimeout(function() { this.display(); }.bind(this), 0)}.bind(this));
   },
 
-  suggestComment: function(x, y, data) {/*INTERFACE*/
+  suggestComment: function(data) {/*INTERFACE*/
+    console.log(data)
     if (this.tmpGroup !== null) {
-      x ? this.tmpGroup.x = x : null;
-      y ? this.tmpGroup.y = y : null;
+      data.x ? this.tmpGroup.main.x = data.x : null;
+      data.y ? this.tmpGroup.main.y = data.y : null;
+      this.display();
       return ;
     }
     this.tmpGroup = this.create(r.CommentsGroup, {
       mainID: this.mainID,
       parentID: 0,
-      x: x || 0,
-      y: y || 0,
+      x: data.x || 0,
+      y: data.y || 0,
       onCreate: function() {
         this.tmpGroup.insertMain();
         this.tmpGroup = null;
@@ -49,26 +51,26 @@ var ColComments = r.Seed.extend({
       onRemove: function() {
         this.tmpGroup.el.remove();
         this.tmpGroup = null;
-      }
+      }.bind(this)
     });
     this.tmpGroup.el.style.zIndex = 50;
     this.tmpGroup.main.setAuthor('You');
     this.el.appendChild(this.tmpGroup.el);
+    this.display();
   },
 
   appendCom: function(models, op) {
     if (models[0].parentID != 0 || models[0].mainID !== this.mainID) { return ; }
-    this.tmpGroup = this.create(r.CommentsGroup, {
+    var comAppend = this.create(r.CommentsGroup, {
       id: models[0].id,
       mainID: models[0].mainID,
       onRemove: function() { this.removeGroup(); }
     });
 
-    this.tmpGroup.setMain(models[0], this.ctx);
-    this.el.appendChild(this.tmpGroup.el);
+    comAppend.setMain(models[0], this.ctx);
+    this.el.appendChild(comAppend.el);
     SyntaxHighlighter.highlight();
-    this.commentsList.push(this.tmpGroup);
-    this.tmpGroup = null;
+    this.commentsList.push(comAppend);
     // this.drawAreas();
   },
 
@@ -83,6 +85,55 @@ var ColComments = r.Seed.extend({
     }
   },
 
+
+  setHeight: function(h) {
+    this.el.style.height = h + 'px';
+  },
+
+  displayBubble : function() {
+    if (this.tmpGroup !== null) {
+      this.tmpGroup.el.style.left = this.tmpGroup.main.x + 'px';
+    }
+    for (var i = 0, len = this.commentsList.length; i < len; i++) {
+      this.commentsList[i].refreshDate();
+      this.commentsList[i].el.style.top = this.commentsList[i].main.y + 'px';
+      this.commentsList[i].el.style.left = this.commentsList[i].main.x + 'px';
+      // this.commentsList[i].hide();
+    }
+  },
+
+  displayColumn: function() {
+    var prevDown;
+    if (this.tmpGroup !== null) {
+      this.tmpGroup.el.style.top = this.tmpGroup.main.y + 'px';
+      this.tmpGroup.el.style.left = 0;
+    }
+    this.commentsList.sort(function (a, b) {
+      return a.main.y - b.main.y;
+    });
+
+    for (var i = 0, len = this.commentsList.length; i < len; i++) {
+      this.commentsList[i].refreshDate();
+      this.commentsList[i].el.style.left = 0;
+      this.commentsList[i].el.style.top = this.commentsList[i].main.y + 'px';
+      if (i > 0 && (prevDown = r.Library.exceedSize(this.commentsList[i - 1].el, this.commentsList[i].el.style.top))) {
+        this.commentsList[i].el.style.top = prevDown + 3 + 'px';
+      }
+      // this.commentsList[i].show();
+    }
+  },
+
+  /*SIDE CANVAS*/
+  drawAreas: function() {
+    this.fire('clearCanvas');
+    this.tmpGroup && this.tmpGroup.drawAreas();
+    for (var i = 0, len = this.commentsList.length; i < len; i++) {
+      this.commentsList[i].drawAreas();
+    }
+    // this.display();
+  },
+
+  /*SIDE CANVAS*/
   canTarget: function(e) {
     if (this.ctx.getImageData(e[0], e[1], 1, 1).data[3] === 0) { return 0;}
 
@@ -112,52 +163,6 @@ var ColComments = r.Seed.extend({
       }
     }
     /*!CORE*/
-  },
-
-  setHeight: function(h) {
-    this.el.style.height = h + 'px';
-  },
-
-  displayBubble : function() {
-    if (this.tmpGroup !== null) {
-      this.tmpGroup.el.style.left = this.tmpGroup.main.x + 'px';
-    }
-    for (var i = 0, len = this.commentsList.length; i < len; i++) {
-      this.commentsList[i].refreshDate();
-      this.commentsList[i].el.style.top = this.commentsList[i].main.y + 'px';
-      this.commentsList[i].el.style.left = this.commentsList[i].main.x + 'px';
-      // this.commentsList[i].hide();
-    }
-  },
-
-  displayColumn: function() {
-    console.log('display column', this.commentsList);
-    var prevDown;
-    if (this.tmpGroup !== null) {
-      this.tmpGroup.el.style.left = 0;
-    }
-    for (var i = 0, len = this.commentsList.length; i < len; i++) {
-      this.commentsList[i].refreshDate();
-      this.commentsList[i].el.style.left = 0;
-      this.commentsList[i].el.style.top = this.commentsList[i].main.y + 'px';
-      if (i > 0 && (prevDown = r.Library.exceedSize(this.commentsList[i - 1].el, this.commentsList[i].el.style.top))) {
-        this.commentsList[i].el.style.top = prevDown + 3 + 'px';
-      }
-      // this.commentsList[i].show();
-    }
-  },
-
-  resetCol: function(fid, ctx) {/*Re-set column*/
-    this.el.innerHTML = '';
-    this.tmpGroup = null;
-    this.commentsList = [];
-    this.mainID = fid;
-    this.ctx = ctx;
-    this.dp.comments.where(function(e) {
-      return e.mainID === this.mainID
-    }.bind(this)).each(function(c) {
-      this.appendCom([c]);
-    }.bind(this));
   },
 
   showCom: function() {

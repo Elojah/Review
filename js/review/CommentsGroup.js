@@ -34,6 +34,7 @@ var CommentsGroup = r.Seed.extend({
       id: 0,
       mainID: 0,
       tmpReply: null,
+      x: 0,
       y: 0,
       replies: [],
       collapseEl: null,
@@ -49,6 +50,9 @@ var CommentsGroup = r.Seed.extend({
 
     /*Set com color*/
     this.main.color = this.color;
+    this.main.x = this.x;
+    this.main.y = this.y;
+
     this.wrap.style['border-color'] = this.colorTab[this.main.color];
 
     /*Set events*/
@@ -60,6 +64,7 @@ var CommentsGroup = r.Seed.extend({
   insertMain: function() {
     this.el.remove();
     this.main.author = r.Library.getCookie('name');
+    console.log(this.main.getData());
     this.query('dp').comments.insert(this.main.getData());
   },
 

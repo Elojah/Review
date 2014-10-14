@@ -1,7 +1,8 @@
 sand.define('Test', [
   'Seed',
   'DOM/toDOM',
-  'ComModule'
+  'ComModule',
+  'CanvasTrack'
 ], function(r) {
 
 /*
@@ -23,9 +24,19 @@ var appComments = r.Seed.extend({
   '+init': function() {
 
     this.el.appendChild(this.create(r.toDOM, {tag: '.t0', innerHTML: 'Just some Text'}, 't0'));
-    this.comm = this.create(r.ComModule, {attachEl: this.t0});
+
+    this.comm = this.create(r.ComModule, {attachEl: this.t0, canvas: 'on'});
     this.el.appendChild(this.comm.el);
-    this.t0.onclick = this.comm.suggestComment.bind(this.comm);
+
+
+    this.buttswitch = this.create(r.toDOM, {tag: 'button', innerHTML: 'Switch bubble',events: {
+      click: function() {this.comm.setDisplay('bubble');}.bind(this)
+    }});
+    this.el.appendChild(this.buttswitch);
+    this.buttswitch = this.create(r.toDOM, {tag: 'button', innerHTML: 'Switch column',events: {
+      click: function() {this.comm.setDisplay('column');}.bind(this)
+    }});
+    this.el.appendChild(this.buttswitch);
 
     window.addEventListener('load', function() {
       document.body.appendChild(this.el);

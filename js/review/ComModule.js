@@ -16,12 +16,11 @@ var ComModule = r.Seed.extend({
     return this.create(r.ColComments, {mainID: this.id}, 'colCom').el;
   },
 
-  /*Data init: {attachEl: DOMelement, format: 'column' || 'bubble', canvas: 'on' || 'off', dp: CommonDP}*/
+  /*Data init: {attachEl: DOMelement, canvas: 'on' || 'off', dp: CommonDP}*/
   options: function() {
     return {
       id: this.guid()(),
       attachEl: null,
-      format: 'column',
       canvas: null,
       dp: new r.DP({
         data: {
@@ -46,41 +45,46 @@ var ComModule = r.Seed.extend({
     this.attachEl = attachEl;
 
     this.colCom.setHeight(this.attachEl.clientHeight || this.attachEl.offsetHeight || this.attachEl.scrollHeight || this.attachEl.style.height || 0);
-    this.setFormat();
+    this.setDisplay('column');
 
     //MCB
     window.addEventListener('load', function() {setTimeout(this.resizeCol.bind(this), 0)}.bind(this));
     this.attachEl.addEventListener('resize', this.resizeCol.bind(this));
-    // this.complete = new MutationObserver(this.resizeCol.bind(this));
-    // this.complete.observe(this.attachEl, { childList: true });
 
     doCanvas == 'on' ? this.setCanvas(attachEl) : null;
   },
 
   resizeCol: function() {
-    console.log(this.attachEl.clientHeight, this.attachEl.offsetHeight, this.attachEl.scrollHeight, this.attachEl.style.height)
-    // this.complete.disconnect();
     this.colCom.setHeight(this.attachEl.clientHeight || this.attachEl.offsetHeight || this.attachEl.scrollHeight || this.attachEl.style.height || 0);
-    this.canvasTrack ? this.canvasTrack.setSize(containEl.clientHeight, containEl.clientWidth) : null;
+    this.canvas ? this.canvas.setSize(this.attachEl.clientHeight, this.attachEl.clientWidth) : null;
   },
 
   setCanvas: function(containEl) {
-    this.canvas ? this.canvas.remove() : null;
-    this.canvas = this.create(r.canvasTrack);
-    this.canvasTrack.setSize(containEl.clientHeight, containEl.clientWidth);
-    containEl.appendChild(this.canvas);
+
+    this.canvas = this.create(r.CanvasTrack);
+    this.canvas.setSize(containEl.clientHeight, containEl.clientWidth);
+
+    /*Echanges entre canvas et colcom*/
+    this.canvas.on('valid', this.colCom.suggestComment.bind(this.colCom));
+    this.canvas.onTarget = this.colCom.canTarget.bind(this.colCom);
+    this.canvas.drawAll = this.colCom.drawAreas.bind(this.colCom);
+    this.colCom.on('clearCanvas', this.canvas.clearCanvas.bind(this.canvas));
+    this.colCom.ctx = this.canvas.ctx;
+
+    containEl.appendChild(this.canvas.el);
   },
 
   suggestComment: function(x, y, data) {
     this.colCom.suggestComment.bind(this.colCom)(x, y, data);
   },
 
-  setFormat: function() {
-    if (this.format === 'column') {
+  setDisplay: function(format) {
+    if (format === 'column') {
       this.colCom.display = this.colCom.displayColumn.bind(this.colCom);
-    } else if (this.format == 'bubble') {
+    } else if (format == 'bubble') {
       this.colCom.display = this.colCom.displayBubble.bind(this.colCom);
     }
+    this.colCom.display();
   },
 
   guid: function() {
