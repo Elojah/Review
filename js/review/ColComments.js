@@ -32,10 +32,10 @@ var ColComments = r.Seed.extend({
   },
 
   suggestComment: function(data) {/*INTERFACE*/
-    console.log(data)
     if (this.tmpGroup !== null) {
       data.x ? this.tmpGroup.main.x = data.x : null;
       data.y ? this.tmpGroup.main.y = data.y : null;
+      data.data.points ? this.tmpGroup.setAreas(data.data.points, this.ctx) : null;
       this.display();
       return ;
     }
@@ -44,7 +44,10 @@ var ColComments = r.Seed.extend({
       parentID: 0,
       x: data.x || 0,
       y: data.y || 0,
+      ctx: this.ctx,
+      areas: data.data.points || null,
       onCreate: function() {
+        console.log(this.tmpGroup.main.areas)
         this.tmpGroup.insertMain();
         this.tmpGroup = null;
       }.bind(this),
@@ -71,7 +74,7 @@ var ColComments = r.Seed.extend({
     this.el.appendChild(comAppend.el);
     SyntaxHighlighter.highlight();
     this.commentsList.push(comAppend);
-    // this.drawAreas();
+    this.drawAreas();
   },
 
   deleteCom: function(models, op) {

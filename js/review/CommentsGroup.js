@@ -36,6 +36,8 @@ var CommentsGroup = r.Seed.extend({
       tmpReply: null,
       x: 0,
       y: 0,
+      areas: [],
+      ctx: null,
       replies: [],
       collapseEl: null,
       //HARDCODE
@@ -52,6 +54,7 @@ var CommentsGroup = r.Seed.extend({
     this.main.color = this.color;
     this.main.x = this.x;
     this.main.y = this.y;
+    this.setAreas(this.areas, this.ctx);
 
     this.wrap.style['border-color'] = this.colorTab[this.main.color];
 
@@ -97,10 +100,10 @@ var CommentsGroup = r.Seed.extend({
   highStyle: function() {
     this.el.style.zIndex = '10';
     this.fire('redraw');
-    this.main.areas[0] && ((this.main.areas[0].ctx.strokeStyle =  this.colorTab[this.main.color]) && (this.main.areas[0].ctx.globalAlpha = 0.3));
+    this.main.areas[0] && ((this.ctx.strokeStyle =  this.colorTab[this.main.color]) && (this.ctx.globalAlpha = 0.3));
     this.drawAreas();
     //HARDCODE
-    this.main.areas[0] && (this.main.areas[0].ctx.strokeStyle = "rgba(200, 200, 200, 0.3)");
+    this.main.areas[0] && (this.ctx.strokeStyle = "rgba(200, 200, 200, 0.3)");
   },
 
   usualStyle: function() {
@@ -137,15 +140,14 @@ var CommentsGroup = r.Seed.extend({
     r.Library.eventOut('click', this.el, callback, n);
   },
 
-  setMain: function(data, ctx) {
-
-/*
-    var current_area;
-    for (var i = 0, len = data.areas.length; i < len; i++) {
-      current_area = this.create(r.CanvasArea, {form: 'points', points: data.areas[i], ctx: ctx});
-      this.main.areas.push(current_area);
+  setAreas: function(areas, ctx) {
+    console.log(areas)
+    if (ctx) {
+      this.main.areas.push(this.create(r.CanvasArea, {form: 'points', points: areas, ctx: ctx}));
     }
-*/
+  },
+
+  setMain: function(data, ctx) {
 
     this.main.setAtt(data);
     this.wrap.style['border-color'] = this.colorTab[this.main.color];

@@ -63,7 +63,7 @@ var CanvasTrack = r.Seed.extend({
     this.el.onmousemove = null;
     this.el.onmouseup = null;
     var tmpPos = this.getPosition(e);
-    this.fire('valid', {x: tmpPos[0], y: tmpPos[1], data: {points: this.canvasArea.points, ctx: this.ctx}});
+    this.fire('valid', {x: tmpPos[0], y: tmpPos[1], data: {points: this.canvasArea.points}});
     this.canvasArea = null;
   },
 
